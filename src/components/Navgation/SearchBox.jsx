@@ -37,7 +37,7 @@ export default function SearchBox() {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Search products..."
-          className="p-3 pl-10 rounded-lg bg-white border border-gray-300 w-full focus:outline-none focus:ring-2 focus:ring-green-500 transition"
+          className="p-3 pl-10 rounded-lg bg-white border border-gray-300 w-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500"
         />
         <FaSearch className="absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-500" />
       </div>

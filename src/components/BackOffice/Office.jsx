@@ -12,8 +12,7 @@ import OrderNotification from "./Orders/OrderNotification";
 import AdminDisplay from "./Info/AdminDisplay";
 import AdminInfo from "./Info/AdminView";
 import PromotionManagement from "./Management/PromotionManagement";
-import ProviderServices from "./Services/Services";
-import ServiceUpload from "./Services/ServiceUpload/ServiceUpload";
+
 
 const sections = {
   "upload-products": UploadProducts,
@@ -22,12 +21,10 @@ const sections = {
   "product-list": ProductList,
   "manage-customers": ManageCustomers,
   "view-orders": OrderManagement,
-  "order-notification": OrderNotification,
+  // "order-notification": OrderNotification,
   "admin-display": AdminDisplay,
   "admin-info": AdminInfo,
   "manage-promotions": PromotionManagement,
-  // "view-services": ProviderServices,
-  // "upload-services": ServiceUpload,
 };
 
 export default function BackOfficeLayout({ user }) {

@@ -37,7 +37,7 @@ const applyDiscountsToCart = (cartItems, userPurchases, maxDiscountedItems) => {
     );
 
     if (totalDiscountedItems < maxDiscountedItems && remainingDiscounts > 0) {
-      const discountableQuantity = Math.min(item.quantity, remainingDiscounts);
+      const discountableQuantity = Math.min(item.newQuantity, remainingDiscounts);
       totalDiscountedItems += discountableQuantity;
 
       let discountedPrice;
@@ -53,7 +53,7 @@ const applyDiscountsToCart = (cartItems, userPurchases, maxDiscountedItems) => {
         ...item,
         discountedPrice,
         discountedQuantity: discountableQuantity,
-        nonDiscountedQuantity: item.quantity - discountableQuantity,
+        nonDiscountedQuantity: item.newQuantity - discountableQuantity,
         usageCount: usageCount + discountableQuantity, // Increment the usage count by discounted items
       };
     } else {
@@ -87,7 +87,7 @@ export const applyDiscountOnCheckout = async (userEmail, cart, sellerId) => {
     // Calculate total with discounts applied
     const finalUpdatedCart = updatedCart;
     const total = finalUpdatedCart?.reduce(
-      (sum, item) => sum + (item.discountedPrice || item.price) * item.quantity,
+      (sum, item) => sum + (item.discountedPrice || item.price) * item.newQuantity,
       0
     );
 
@@ -98,7 +98,7 @@ export const applyDiscountOnCheckout = async (userEmail, cart, sellerId) => {
     return {
       updatedCart: cart,
       total: cart[sellerId].reduce(
-        (sum, item) => sum + item.price * item.quantity,
+        (sum, item) => sum + item.price * item.newQuantity,
         0
       ),
       totalDiscount: 0, // No discount if there's an error

@@ -1,6 +1,7 @@
 import PromotionInfo from "./PromotionInfo";
 
 const PromoProductList = ({
+  uniqueId,
   products,
   isSeller,
   selectedProducts,
@@ -14,8 +15,9 @@ const PromoProductList = ({
         : [...prevSelected, product]
     );
   };
+  const updatedProducts = products.filter((p) => p.sellerId === uniqueId);
 
-  const isSelectedAll = selectedProducts.length === products.length;
+  const isSelectedAll = selectedProducts.length === updatedProducts.length;
 
   return (
     <div className="product-list">
@@ -33,7 +35,7 @@ const PromoProductList = ({
       </div>
 
       <ul className="space-y-4">
-        {products.map((product) => (
+        {updatedProducts.map((product) => (
           <li key={product.id} className="border-b pb-4">
             <div className="flex items-center justify-between">
               <div>

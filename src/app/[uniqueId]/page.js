@@ -10,40 +10,35 @@ import { getUserProfileByUniqueId } from "@/utils/usersUtils";
 
 const UserProfile = ({ params }) => {
   const { uniqueId } = params; // Unique ID from the URL
-  const { user, admin, loading: authLoading } = useProvideAuth(); // Include loading state from the auth hook
+  const { user, admin, loading: authLoading } = useProvideAuth();
   const [loading, setLoading] = useState(true);
-  const [userInfo, setUserInfo] = useState(null); // Initialize as null to avoid premature access
-  const [isPublic, setIsPublic] = useState(false); // Determine if the profile is public
-
+  const [userInfo, setUserInfo] = useState(null); // Holds the user data
+  const [isPublic, setIsPublic] = useState(false); // Flag for public profiles
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        if (authLoading) {
-          // Wait until authentication loading is done
-          return;
-        }
+        // Wait for authentication to finish loading
+        if (authLoading) return;
 
-        if (user && user.uniqueId === uniqueId) {
-          // The profile is the authenticated user's own profile
-          setIsPublic(false);
+        // Determine if the profile belongs to the current user/admin or is public
+        if (user?.uniqueId === uniqueId) {
           setUserInfo(user);
-        } else if (admin && admin.uniqueId === uniqueId) {
-          // The profile is the authenticated admin's own profile
           setIsPublic(false);
+        } else if (admin?.uniqueId === uniqueId) {
           setUserInfo(admin);
+          setIsPublic(false);
         } else {
-          // Neither user nor admin matches the uniqueId, fetch the profile
           const fetchedUserData = await getUserProfileByUniqueId(uniqueId);
           if (fetchedUserData) {
-            setIsPublic(true); // Set as public profile
             setUserInfo(fetchedUserData);
+            setIsPublic(true);
           }
         }
-        setLoading(false);
       } catch (error) {
         console.error("Error fetching user profile:", error);
-        setLoading(false);
+      } finally {
+        setLoading(false); // Ensure loading is false regardless of success or error
       }
     };
 
@@ -52,26 +47,37 @@ const UserProfile = ({ params }) => {
     }
   }, [admin, uniqueId, user, authLoading]);
 
+  // Show a loading indicator while fetching or authentication is in progress
   if (loading || authLoading) {
-    return <div className="max-[760px]:pt-20">Loading user</div>; // Show a loading indicator while fetching data
+    return <div className="max-[760px]:pt-20">Loading user...</div>;
   }
 
+  // Handle case where the user/admin profile isn't found
   if (!userInfo) {
-    return <div>User not found</div>; // Handle case where the user/admin profile isn't found
+    return <div>User not found</div>;
   }
+
+  // Simplify rendering logic with clearer conditions
+  const isSeller = userInfo.role === "seller";
+  const isOwner = !isPublic; // Profile belongs to the authenticated user or admin
 
   return (
     <main className="min-h-screen">
-      {userInfo.role != "seller" && !isPublic ? (
-        <>
-          <UserInfo userInfo={userInfo} handleUpdate={setUserInfo} />
-          <Orders orderIds={userInfo.orders || []} />
-          <UserCart cartItems={userInfo.cart || []} />
-        </>
-      ) : userInfo.role === "seller" && !isPublic ? (
-        <BackOfficeLayout user={userInfo} />
+      {isOwner ? (
+        isSeller ? (
+          // Render BackOfficeLayout for sellers
+          <BackOfficeLayout user={userInfo} />
+        ) : (
+          // Render user info, orders, and cart for non-sellers
+          <>
+            <UserInfo userInfo={userInfo} handleUpdate={setUserInfo} />
+            <Orders orderIds={userInfo.orders || []} />
+            <UserCart cartItems={userInfo.cart || []} />
+          </>
+        )
       ) : (
-        isPublic && <UserDisplay userInfo={userInfo} />
+        // Render public user display for non-owners
+        <UserDisplay userInfo={userInfo} />
       )}
     </main>
   );

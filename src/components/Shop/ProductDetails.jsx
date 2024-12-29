@@ -15,6 +15,7 @@ const ProductDetails = ({ productId, sellerId }) => {
   const [loading, setLoading] = useState(true);
   const [currentImage, setCurrentImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [selectedVariant, setSelectedVariant] = useState(null);
   const { addToCart } = useCart();
   const router = useRouter();
 
@@ -22,16 +23,63 @@ const ProductDetails = ({ productId, sellerId }) => {
     fetchSingleProduct(productId, setProduct, setLoading);
   }, [productId]);
 
+  useEffect(() => {
+    if (product && product.variants && product.variants.length > 0) {
+      // Set the first variant as the default selected variant
+      setSelectedVariant(product.variants[0]);
+    }
+  }, [product]);
+
   const handleQuantityChange = (e) => {
     const value = Number(e.target.value);
     setQuantity(value > 0 ? value : 1); // Ensure quantity is at least 1
   };
 
   const handleAddToCart = () => {
-    if (!product || quantity < 1) return; // Prevent adding invalid product or quantity
+    if (quantity < 1) return; // Prevent adding invalid product or quantity
+    const pickedVariant = product.isVariant
+      ? { ...selectedVariant }
+      : { color: product.color, size: product.size, price: product.price };
+    console.log("Adding variant: " + JSON.stringify(pickedVariant));
+    const productData = {
+      title: product.title,
+      imageUrl: product.imageUrls[0],
+      state: product.location?.state || "",
+      address: product.location?.address || "",
+      id: product.id,
+      ...pickedVariant, // Include variant details
+      sellerEmail: product.sellerEmail,
+      newQuantity: quantity,
+      quantity: product.quantity,
+      sellerId: sellerId || product.sellerId,
+      variantId: product.isVariant ? selectedVariant.variantId : "", // Ensure variantId is passed to the cart
+    };
 
-    addToCart({ ...product, quantity, sellerId: sellerId || product.sellerId });
+    console.log("Product data: " + JSON.stringify(productData));
+    addToCart(productData);
+
     router.push(`/${sellerId}/cart`);
+  };
+
+  const handleVariantChange = (e) => {
+    const { name, value } = e.target; // name is 'size' or 'color'
+    const updatedVariant = { ...selectedVariant, [name]: value };
+
+    // Find the matching variant with the updated size and color
+    const matchingVariant = product.variants.find(
+      (variant) =>
+        (name === "size"
+          ? variant.size === value
+          : variant.size === updatedVariant.size) &&
+        (name === "color"
+          ? variant.color === value
+          : variant.color === updatedVariant.color)
+    );
+
+    if (matchingVariant) {
+      setSelectedVariant(matchingVariant);
+      setQuantity(1); // Reset quantity to 1 when variant changes
+    }
   };
 
   if (loading) {
@@ -96,23 +144,110 @@ const ProductDetails = ({ productId, sellerId }) => {
           </h1>
           <div className="flex items-center space-x-3 mb-4">
             <FaStar className="text-yellow-500" />
-            <p className="text-lg font-medium">{product.averageRating || 0}/5</p>
+            <p className="text-lg font-medium">
+              {product.averageRating || 0}/5
+            </p>
             <p className="text-gray-500">
               ({product.reviews?.length || 0} reviews)
             </p>
           </div>
-          <p className="text-gray-600 mb-4">{product.description}</p>
+          <p className="text-gray-900 mb-4">{product.description}</p>
           <p className="text-2xl font-semibold text-green-600 mb-2">
-            ₦{product.price.toLocaleString()}
+            ₦
+            {selectedVariant
+              ? selectedVariant.price.toLocaleString()
+              : product.price.toLocaleString()}
           </p>
-          <div className="grid grid-cols-2 gap-4">
-            <p className="text-gray-500">Size: {product.size}</p>
-            <p className="text-gray-500">Color: {product.color}</p>
-            <p className="text-gray-500">Brand: {product.brand}</p>
-            <p className="text-gray-500">
-              Availability: {product.availability}
-            </p>
+
+          {/* All Variants Section */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
+            {product.isVariant &&
+              product.variants.map((variant) => (
+                <div
+                  key={variant.variantId}
+                  className={`p-2 border-2 rounded-md cursor-pointer transition-transform duration-200 ${
+                    selectedVariant?.variantId === variant.variantId
+                      ? "border-green-500 scale-105"
+                      : "border-gray-200 hover:border-gray-400"
+                  }`}
+                  onClick={() => setSelectedVariant(variant)}
+                >
+                  <Image
+                    src={variant.image || product.imageUrls[0]}
+                    alt={`${variant.color} - ${variant.size}`}
+                    width={80}
+                    height={80}
+                    className="object-cover rounded-md w-16 h-16 md:w-20 md:h-20 mx-auto"
+                  />
+                  <p className="mt-2 text-center text-sm text-gray-700">
+                    Size: {variant.size} | Color: {variant.color}
+                  </p>
+                  <p className="text-center text-green-600 text-sm">
+                    ₦{variant.price.toLocaleString()}
+                  </p>
+                </div>
+              ))}
           </div>
+
+          {product.isVariant ? (
+            <div className="grid grid-cols-2 gap-4">
+              {/* Size Selector */}
+              <div>
+                <label className="text-gray-500">Size:</label>
+                <select
+                  name="size"
+                  value={selectedVariant?.size || ""}
+                  onChange={handleVariantChange}
+                  className="w-full p-2 border border-gray-300 rounded"
+                  required
+                >
+                  {product.variants
+                    .filter(
+                      (variant) => variant.color === selectedVariant?.color
+                    )
+                    .map((variant) => (
+                      <option key={variant.variantId} value={variant.size}>
+                        {variant.size}
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              {/* Color Selector */}
+              <div>
+                <label className="text-gray-500">Color:</label>
+                <select
+                  name="color"
+                  value={selectedVariant?.color || ""}
+                  onChange={handleVariantChange}
+                  className="w-full p-2 border border-gray-300 rounded"
+                  required
+                >
+                  {product.variants
+                    .filter((variant) => variant.size === selectedVariant?.size)
+                    .map((variant) => (
+                      <option key={variant.variantId} value={variant.color}>
+                        {variant.color}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            </div>
+          ) : (
+            <div>
+              {product.size && (
+                <p className="text-black">Size: {product.size}</p>
+              )}
+              {product.color && (
+                <p className="text-black">Color: {product.color}</p>
+              )}
+            </div>
+          )}
+
+          {/* Stock Information */}
+          <p className="text-gray-900">
+            In Stock: {selectedVariant?.quantity || product.quantity || 0}
+          </p>
 
           {/* Quantity Control */}
           <div className="flex items-center mt-6 mb-4">
@@ -122,6 +257,7 @@ const ProductDetails = ({ productId, sellerId }) => {
               value={quantity}
               onChange={handleQuantityChange}
               min="1"
+              max={selectedVariant?.quantity || product.quantity} // Limit max quantity to available stock
               className="w-16 border border-gray-300 rounded-md text-center py-1"
             />
           </div>

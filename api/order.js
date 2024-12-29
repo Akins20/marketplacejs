@@ -8,6 +8,7 @@ import {
   serverTimestamp,
   query,
   where,
+  getDoc
 } from "firebase/firestore";
 import { v4 as uuidv4 } from "uuid";
 import { firestore } from "./firebase.js";
@@ -66,6 +67,47 @@ export default async function handler(req, res) {
         notificationIds: [],
       });
 
+      // Deduct product quantities from Firestore based on variants or non-variants
+      for (const item of cart) {
+        // Fetch the product from Firestore
+        const normalizedProductId = item.productId
+        .toLowerCase()
+        .trim()
+        .replace(/-/g, " ");
+        const productRef = doc(firestore, "products", normalizedProductId);
+        const productSnap = await getDoc(productRef);
+
+        if (productSnap.exists()) {
+          const productData = productSnap.data();
+
+          // Check if the product has variants
+          if (item.variantId) {
+            // Deduct the quantity for a variant product
+            const variant = productData.variants.find(
+              (variant) => variant.id === item.variantId
+            );
+
+            if (variant) {
+              const updatedQuantity = variant.quantity - item.newQuantity;
+              await updateDoc(productRef, {
+                [`variants.${productData.variants.indexOf(variant)}.quantity`]:
+                  updatedQuantity,
+              });
+            } else {
+              console.error("Variant not found for product: ", item.productId);
+            }
+          } else {
+            // Deduct the quantity for a non-variant product
+            const updatedQuantity = productData.quantity - item.newQuantity;
+            await updateDoc(productRef, {
+              quantity: updatedQuantity,
+            });
+          }
+        } else {
+          console.error("Product not found in Firestore: ", item.productId);
+        }
+      }
+
       // Step 1: Fetch the user's document in the "users" collection where email matches
       const usersCollection = collection(firestore, "users");
       const q = query(
@@ -85,8 +127,8 @@ export default async function handler(req, res) {
         console.error("User not found");
       }
 
-      // Step 2: Update each seller's orders in the "admins" collection
-      const adminsCollection = collection(firestore, "admins");
+      // Step 2: Update each seller's orders in the "sellers" collection
+      const adminsCollection = collection(firestore, "sellers");
 
       const sellerPromises = Object.keys(sellerGroups).map(
         async (sellerEmail) => {
@@ -99,13 +141,15 @@ export default async function handler(req, res) {
 
             if (!adminDocs.empty) {
               const adminDoc = adminDocs.docs[0];
-              const adminRef = doc(firestore, "admins", adminDoc.id);
+              const adminRef = doc(firestore, "sellers", adminDoc.id);
               const existingOrders = adminDoc.data().orders || [];
               await updateDoc(adminRef, {
                 orders: [...existingOrders, orderId],
               });
             } else {
-              console.error(`Admin not found for seller email: ${sellerEmail}`);
+              console.error(
+                `Seller not found for seller email: ${sellerEmail}`
+              );
             }
           }
         }
@@ -114,90 +158,91 @@ export default async function handler(req, res) {
       await Promise.all(sellerPromises);
 
       const tableStyles = `
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 20px;
-      `;
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    `;
+
       const tableHeaderStyles = `
-        border: 1px solid #ddd;
-        padding: 10px;
-        background-color: #f2f2f2;
-        text-align: left;
-      `;
+      border: 1px solid #ddd;
+      padding: 10px;
+      background-color: #f2f2f2;
+      text-align: left;
+    `;
+
       const tableCellStyles = `
-        border: 1px solid #ddd;
-        padding: 10px;
-        text-align: left;
-      `;
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+    `;
 
       // Email content for admin
       const adminEmailHtml = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; padding: 20px; border-radius: 10px; background-color: #f9f9f9;">
-          <h2 style="text-align: center; color: #4CAF50;">New Order Received</h2>
-          <p><strong>Customer:</strong> ${customerInfo.name} (${
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; padding: 20px; border-radius: 10px; background-color: #f9f9f9;">
+        <h2 style="text-align: center; color: #4CAF50;">New Order Received</h2>
+        <p><strong>Customer:</strong> ${customerInfo.name} (${
         customerInfo.email
       })</p>
-          <p><strong>Phone Number:</strong> ${customerInfo.phone}</p>
-          <p><strong>Delivery Address:</strong> ${deliveryInfo.address}, ${
+        <p><strong>Phone Number:</strong> ${customerInfo.phone}</p>
+        <p><strong>Delivery Address:</strong> ${deliveryInfo.address}, ${
         deliveryInfo.city
       }, ${deliveryInfo.state}, ${deliveryInfo.postalCode}, ${
         deliveryInfo.country
       }</p>
-          <p><strong>Order Date:</strong> ${currentTime}</p>
-          <p><strong>Transaction Reference:</strong> ${transactionReference}</p>
-          <h3>Order Details</h3>
-          ${Object.keys(sellerGroups)
-            .map((sellerEmail) => {
-              const sellerProducts = sellerGroups[sellerEmail];
-              return `
-                <h4 style="text-align: left;">Products for ${
-                  sellerEmail === adminEmail
-                    ? "Admin (Site Owner)"
-                    : `Seller: ${sellerEmail}`
-                }</h4>
-                <table style="${tableStyles}">
-                  <thead>
-                    <tr>
-                      <th style="${tableHeaderStyles}">Product</th>
-                      <th style="${tableHeaderStyles}">Quantity</th>
-                      <th style="${tableHeaderStyles}">Original Price</th>
-                      <th style="${tableHeaderStyles}">Discounted Price</th>
-                      <th style="${tableHeaderStyles}">Size</th>
-                      <th style="${tableHeaderStyles}">Color</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${sellerProducts
-                      .map(
-                        (item) => `
-                        <tr>
-                          <td style="${tableCellStyles}">${item.title}</td>
-                          <td style="${tableCellStyles}">${item.quantity}</td>
-                          <td style="${tableCellStyles}">₦${item.price}</td>
-                          <td style="${tableCellStyles}">₦${
-                          item.discountedPrice || item.price
-                        }</td>
-                          
-                          <td style="${tableCellStyles}">${
-                          item.size || "N/A"
-                        }</td>
-                          <td style="${tableCellStyles}">${
-                          item.color || "N/A"
-                        }</td>
-                        </tr>
-                      `
-                      )
-                      .join("")}
-                  </tbody>
-                </table>
-              `;
-            })
-            .join("")}
-          <p style="text-align: right;"><strong>Total Amount:</strong> ₦${
-            totalAmount / 100
-          }</p>
-        </div>
-      `;
+        <p><strong>Order Date:</strong> ${currentTime}</p>
+        <p><strong>Transaction Reference:</strong> ${transactionReference}</p>
+        <h3>Order Details</h3>
+        ${Object.keys(sellerGroups)
+          .map((sellerEmail) => {
+            const sellerProducts = sellerGroups[sellerEmail];
+            return `
+              <h4 style="text-align: left;">Products for ${
+                sellerEmail === adminEmail
+                  ? "Admin (Site Owner)"
+                  : `Seller: ${sellerEmail}`
+              }</h4>
+              <table style="${tableStyles}">
+                <thead>
+                  <tr>
+                    <th style="${tableHeaderStyles}">Product</th>
+                    <th style="${tableHeaderStyles}">Quantity</th>
+                    <th style="${tableHeaderStyles}">Original Price</th>
+                    <th style="${tableHeaderStyles}">Discounted Price</th>
+                    <th style="${tableHeaderStyles}">Size</th>
+                    <th style="${tableHeaderStyles}">Color</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${sellerProducts
+                    .map(
+                      (item) => `
+                      <tr>
+                        <td style="${tableCellStyles}">${item.title}</td>
+                        <td style="${tableCellStyles}">${item.quantity}</td>
+                        <td style="${tableCellStyles}">₦${item.price}</td>
+                        <td style="${tableCellStyles}">₦${
+                        item.discountedPrice || item.price
+                      }</td>
+                        <td style="${tableCellStyles}">${
+                        item.size || "N/A"
+                      }</td>
+                        <td style="${tableCellStyles}">${
+                        item.color || "N/A"
+                      }</td>
+                      </tr>
+                    `
+                    )
+                    .join("")}
+                </tbody>
+              </table>
+            `;
+          })
+          .join("")}
+        <p style="text-align: right;"><strong>Total Amount:</strong> ₦${(
+          totalAmount / 100
+        ).toFixed(2)}</p>
+      </div>
+    `;
 
       await transporter.sendMail({
         from: adminEmail,
@@ -208,52 +253,51 @@ export default async function handler(req, res) {
 
       // Email content for customer
       const customerEmailHtml = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; padding: 20px; border-radius: 10px; background-color: #f9f9f9;">
-          <h2 style="text-align: center; color: #4CAF50;">Thank you for your order!</h2>
-          <p>Hi ${customerInfo.name},</p>
-          <p>Thank you for shopping with us! Your order has been successfully placed. Please expect delivery within the next 7 days.</p>
-          <p><strong>Delivery Address:</strong> ${deliveryInfo.address}, ${
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; padding: 20px; border-radius: 10px; background-color: #f9f9f9;">
+        <h2 style="text-align: center; color: #4CAF50;">Thank you for your order!</h2>
+        <p>Hi ${customerInfo.name},</p>
+        <p>Thank you for shopping with us! Your order has been successfully placed. Please expect delivery within the next 7 days.</p>
+        <p><strong>Delivery Address:</strong> ${deliveryInfo.address}, ${
         deliveryInfo.city
       }, ${deliveryInfo.state}, ${deliveryInfo.postalCode}, ${
         deliveryInfo.country
       }</p>
-          <p><strong>Order Date:</strong> ${currentTime}</p>
-          <p><strong>Transaction Reference:</strong> ${transactionReference}</p>
-          <h3 style="color: #4CAF50;">Order Summary</h3>
-          <table style="${tableStyles}">
-            <thead>
-              <tr>
-                <th style="${tableHeaderStyles}">Product</th>
-                <th style="${tableHeaderStyles}">Quantity</th>
-                <th style="${tableHeaderStyles}">Original Price</th>
-                <th style="${tableHeaderStyles}">Discounted Price</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${cart
-                .map(
-                  (item) => `
-                    <tr>
-                      <td style="${tableCellStyles}">${item.title}</td>
-                      <td style="${tableCellStyles}">${item.quantity}</td>
-                      <td style="${tableCellStyles}">₦${item.price}</td>
-                      <td style="${tableCellStyles}">₦${
-                    item.discountedPrice || item.price
-                  }</td>
-                     
-                    </tr>
-                  `
-                )
-                .join("")}
-            </tbody>
-          </table>
-          <p style="text-align: right;"><strong>Total Amount:</strong> ₦${
-            totalAmount / 100
-          }</p>
-          <p>If you have any questions, feel free to contact us.</p>
-          <p>Best regards,<br/>The Doodies E-Commerce Team</p>
-        </div>
-      `;
+        <p><strong>Order Date:</strong> ${currentTime}</p>
+        <p><strong>Transaction Reference:</strong> ${transactionReference}</p>
+        <h3 style="color: #4CAF50;">Order Summary</h3>
+        <table style="${tableStyles}">
+          <thead>
+            <tr>
+              <th style="${tableHeaderStyles}">Product</th>
+              <th style="${tableHeaderStyles}">Quantity</th>
+              <th style="${tableHeaderStyles}">Original Price</th>
+              <th style="${tableHeaderStyles}">Discounted Price</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${cart
+              .map(
+                (item) => `
+                  <tr>
+                    <td style="${tableCellStyles}">${item.title}</td>
+                    <td style="${tableCellStyles}">${item.quantity}</td>
+                    <td style="${tableCellStyles}">₦${item.price}</td>
+                    <td style="${tableCellStyles}">₦${
+                  item.discountedPrice || item.price
+                }</td>
+                  </tr>
+                `
+              )
+              .join("")}
+          </tbody>
+        </table>
+        <p style="text-align: right;"><strong>Total Amount:</strong> ₦${(
+          totalAmount / 100
+        ).toFixed(2)}</p>
+        <p>If you have any questions, feel free to contact us.</p>
+        <p>Best regards,<br/>The Doodies E-Commerce Team</p>
+      </div>
+    `;
 
       await transporter.sendMail({
         from: adminEmail,
@@ -268,58 +312,57 @@ export default async function handler(req, res) {
         .map((sellerEmail) => {
           const sellerProducts = sellerGroups[sellerEmail];
           const sellerEmailHtml = `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; padding: 20px; border-radius: 10px; background-color: #f9f9f9;">
-              <h2 style="text-align: center; color: #4CAF50;">New Order for Your Products</h2>
-              <p><strong>Customer:</strong> ${customerInfo.name} (${
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; padding: 20px; border-radius: 10px; background-color: #f9f9f9;">
+            <h2 style="text-align: center; color: #4CAF50;">New Order for Your Products</h2>
+            <p><strong>Customer:</strong> ${customerInfo.name} (${
             customerInfo.email
           })</p>
-              <p><strong>Phone Number:</strong> ${customerInfo.phone}</p>
-              <p><strong>Delivery Address:</strong> ${deliveryInfo.address}, ${
+            <p><strong>Phone Number:</strong> ${customerInfo.phone}</p>
+            <p><strong>Delivery Address:</strong> ${deliveryInfo.address}, ${
             deliveryInfo.city
           }, ${deliveryInfo.state}, ${deliveryInfo.postalCode}, ${
             deliveryInfo.country
           }</p>
-              <p><strong>Order Date:</strong> ${currentTime}</p>
-              <p><strong>Transaction Reference:</strong> ${transactionReference}</p>
-              <h3 style="color: #4CAF50;">Order Details</h3>
-              <table style="${tableStyles}">
-                <thead>
-                  <tr>
-                    <th style="${tableHeaderStyles}">Product</th>
-                    <th style="${tableHeaderStyles}">Quantity</th>
-                    <th style="${tableHeaderStyles}">Original Price</th>
-                    <th style="${tableHeaderStyles}">Discounted Price</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${sellerProducts
-                    .map(
-                      (item) => `
-                        <tr>
-                          <td style="${tableCellStyles}">${item.title}</td>
-                          <td style="${tableCellStyles}">${item.quantity}</td>
-                          <td style="${tableCellStyles}">₦${item.price}</td>
-                          <td style="${tableCellStyles}">₦${
-                        item.discountedPrice || item.price
-                      }</td>
-                          
-                        </tr>
-                      `
-                    )
-                    .join("")}
-                </tbody>
-              </table>
-              <p style="text-align: right;"><strong>Total Amount for Your Products:</strong> ₦${sellerProducts.reduce(
-                (sum, item) => sum + item.price * item.quantity,
-                0
-              )}</p>
-            </div>
-          `;
+            <p><strong>Order Date:</strong> ${currentTime}</p>
+            <p><strong>Transaction Reference:</strong> ${transactionReference}</p>
+            <h3 style="color: #4CAF50;">Order Details</h3>
+            <table style="${tableStyles}">
+              <thead>
+                <tr>
+                  <th style="${tableHeaderStyles}">Product</th>
+                  <th style="${tableHeaderStyles}">Quantity</th>
+                  <th style="${tableHeaderStyles}">Original Price</th>
+                  <th style="${tableHeaderStyles}">Discounted Price</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${sellerProducts
+                  .map(
+                    (item) => `
+                      <tr>
+                        <td style="${tableCellStyles}">${item.title}</td>
+                        <td style="${tableCellStyles}">${item.quantity}</td>
+                        <td style="${tableCellStyles}">₦${item.price}</td>
+                        <td style="${tableCellStyles}">₦${
+                      item.discountedPrice || item.price
+                    }</td>
+                      </tr>
+                    `
+                  )
+                  .join("")}
+              </tbody>
+            </table>
+            <p style="text-align: right;"><strong>Total Amount for Your Products:</strong> ₦${sellerProducts.reduce(
+              (sum, item) => sum + item.price * item.quantity,
+              0
+            )}</p>
+          </div>
+        `;
 
           return transporter.sendMail({
             from: adminEmail,
             to: sellerEmail,
-            subject: `New Order for Your Products - ${transactionReference}`,
+            subject: `New Order - ${transactionReference}`,
             html: sellerEmailHtml,
           });
         });

@@ -10,28 +10,40 @@ import CartSummary from "./CartSummary";
 const CartPage = ({ sellerId }) => {
   const { cart, getCartBySeller } = useCart();
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
   const [filteredCart, setFilteredCart] = useState([]);
   const [selectedSellerId, setSelectedSellerId] = useState("all");
 
+  // Function to check if an object or array is empty
+  const isEmpty = (obj) => {
+    return (
+      obj == null ||
+      (Array.isArray(obj) && obj.length === 0) ||
+      (typeof obj === "object" && Object.keys(obj).length === 0)
+    );
+  };
+
+  // Update filteredCart whenever cart or sellerId changes
   useEffect(() => {
-    setLoading(true);
     if (sellerId) {
-      const sellerCart = getCartBySeller(sellerId);
-      setFilteredCart(sellerCart);
+      const sellerCart = getCartBySeller(sellerId) || [];
+      setFilteredCart(Array.isArray(sellerCart) ? sellerCart : []);
       setSelectedSellerId(sellerId);
     } else {
-      setFilteredCart(Object.values(cart).flat());
+      const allCartItems = Object.values(cart || {}).flat() || [];
+      setFilteredCart(Array.isArray(allCartItems) ? allCartItems : []);
+      setSelectedSellerId("all");
     }
-    setLoading(false);
-  }, [cart, sellerId]);
+  }, [cart, sellerId]); // Re-run whenever cart or sellerId changes
 
+  // Handle Checkout
   const handleCheckout = () => {
-    if (filteredCart.length === 0) return;
+    if (isEmpty(filteredCart)) return;
+
     const pickedSellerId =
       selectedSellerId === "all"
-        ? Object.keys(cart)[0]
-        : selectedSellerId || sellerId;
+        ? Object.keys(cart)[0] // Default to the first seller if no seller is selected
+        : selectedSellerId;
+
     router.push(`/${pickedSellerId}/checkout`);
   };
 
@@ -41,11 +53,8 @@ const CartPage = ({ sellerId }) => {
         Your Cart
       </h1>
 
-      {loading ? (
-        <div className="text-center">
-          <p className="text-lg">Loading your cart...</p>
-        </div>
-      ) : filteredCart.length === 0 ? (
+      {/* If cart is empty, show appropriate message */}
+      {isEmpty(filteredCart) ? (
         <div className="text-center">
           <p className="text-xl font-semibold">
             {sellerId
@@ -61,6 +70,7 @@ const CartPage = ({ sellerId }) => {
         </div>
       ) : (
         <div>
+          {/* Only show Seller Filter if no sellerId is passed */}
           {!sellerId && (
             <SellerFilter
               selectedSellerId={selectedSellerId}
@@ -71,12 +81,14 @@ const CartPage = ({ sellerId }) => {
 
           <div className="flex flex-col md:flex-row md:space-x-8 text-gray-800">
             <div className="flex-grow space-y-6">
-              {filteredCart.map((item) => (
-                <CartItem key={item.id} item={item} />
-              ))}
+              {/* Ensure filteredCart is an array and map over it */}
+              {Array.isArray(filteredCart) &&
+                filteredCart.map((item) => (
+                  <CartItem key={item.id} item={item} sellerId={sellerId} />
+                ))}
             </div>
             <CartSummary
-              filteredCart={filteredCart}
+              sellerId={sellerId}
               handleCheckout={handleCheckout}
             />
           </div>

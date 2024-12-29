@@ -5,19 +5,18 @@ import { FaTrash } from "react-icons/fa";
 import useCart from "@/hooks/useCart";
 
 const CheckoutSummary = ({ sellerId }) => {
-  const { cart, getCartBySeller } = useCart();
+  const { cart, getCartBySeller, filterCart } = useCart();
   const [sellerCart, setSellerCart] = useState([]);
   const [totalPrice, setTotalPrice] = useState(0);
-  
 
   useEffect(() => {
     // Check if sellerId is provided and filter cart items accordingly
-    const filteredCart = getCartBySeller(sellerId);
+    const filteredCart = filterCart(cart, sellerId);
     setSellerCart(filteredCart);
 
     // Calculate total price
     const total = filteredCart.reduce(
-      (total, item) => total + item.price * item.quantity,
+      (total, item) => total + item.price * item.newQuantity,
       0
     );
     setTotalPrice(total);
@@ -28,10 +27,6 @@ const CheckoutSummary = ({ sellerId }) => {
       style: "currency",
       currency: "NGN",
     }).format(price);
-  };
-
-  const removeItemFromCart = (sellerId, itemId) => {
-    // Logic to remove an item from cart based on sellerId and itemId
   };
 
   return (
@@ -50,15 +45,17 @@ const CheckoutSummary = ({ sellerId }) => {
               >
                 <div className="flex items-center space-x-4">
                   <img
-                    src={item.imageUrls[0]}
+                    src={item.imageUrl || item.imageUrls[0]}
                     alt={item.title}
                     className="w-16 h-16 object-cover rounded-md"
                   />
-                  <p className="text-lg max-[760px]:text-sm max-[760px]:text-balance">{item.title}</p>
+                  <p className="text-lg max-[760px]:text-sm max-[760px]:text-balance">
+                    {item.title}
+                  </p>
                 </div>
                 <div className="flex items-center space-x-4">
                   <p className="text-lg">
-                    {formatPrice(item.price * item.quantity)}
+                    {formatPrice(item.price * item.newQuantity)}
                   </p>
                 </div>
               </div>

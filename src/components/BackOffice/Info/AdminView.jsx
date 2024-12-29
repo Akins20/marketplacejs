@@ -121,7 +121,7 @@ const AdminInfo = ({ adminInfo }) => {
   };
 
   return (
-    <section className="bg-white shadow-md rounded-md p-6 mb-10">
+    <section className="bg-white shadow-md rounded-md p-6 mb-10 overflow-x-hidden">
       <h2 className="text-xl font-semibold mb-4">
         <FaUserShield className="inline mr-2 text-green-500" />
         Admin Information

@@ -7,7 +7,7 @@ const formatTitleForUrl = (title) => {
 };
 
 export default async function sitemap() {
-  const baseUrl = "https://doodies.com"; // Your base URL
+  const baseUrl = "https://marketplacejs.com"; // Your base URL
 
   // Static pages
   const staticPages = [

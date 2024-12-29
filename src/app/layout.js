@@ -1,6 +1,6 @@
 import localFont from "next/font/local";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
+import Navbar from "@/components/Navgation/Navbar";
 import Footer from "@/components/Footer";
 import Script from "next/script";
 // import Breadcrumbs from "@/components/BreadCrumbs";

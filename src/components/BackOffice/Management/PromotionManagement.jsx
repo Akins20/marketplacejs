@@ -110,7 +110,7 @@ const PromotionManagement = ({ user }) => {
   );
 
   return (
-    <div className="promotion-management-hub bg-inherit mb-10">
+    <div className="promotion-management-hub bg-inherit mb-10 text-center">
       <h2 className="text-xl font-semibold mb-4">
         {user.isAdmin ? "Manage All Promotions" : "Manage Your Promotions"}
       </h2>
@@ -156,6 +156,7 @@ const PromotionManagement = ({ user }) => {
 
       {/* List of Products */}
       <PromoProductList
+        uniqueId={user.uniqueId}
         products={currentProducts}
         isSeller={isSeller(user)}
         selectedProducts={selectedProducts}

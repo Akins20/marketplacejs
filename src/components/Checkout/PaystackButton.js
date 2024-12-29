@@ -4,6 +4,7 @@ import PaymentFailedModal from "./PaymentFailedModal";
 import PaymentSuccessModal from "./PaymentSuccessModal";
 import useCart from "@/hooks/useCart"; // Hook to manage the cart
 import { applyDiscountOnCheckout } from "@/utils/PromotionUtils"; // Utility to apply discount
+import { useRouter } from "next/navigation";
 // import { calculateAdditionalCharge } from "@/utils/calculateAdditionCharge";
 
 const PaystackButton = ({
@@ -25,6 +26,7 @@ const PaystackButton = ({
   const [totalDiscount, setTotalDiscount] = useState(0); // Store total discount
   const [splitCode, setSplitCode] = useState("");
   const [subAccountCode, setSubAccountCode] = useState("");
+  const router = useRouter();
   // console.log("Usermail: ", userEmail)
 
   const applyDiscount = (item) => {
@@ -37,7 +39,7 @@ const PaystackButton = ({
 
     let discountedPrice = item.price;
     let discountedItems = Math.min(
-      item.quantity,
+      item.newQuantity,
       parseInt(maxDiscountedItems, 10) || 0
     );
 
@@ -81,7 +83,7 @@ const PaystackButton = ({
           const { discountedPrice, discountedItems } = applyDiscount(item);
           const totalItemPrice =
             discountedItems * discountedPrice +
-            (item.quantity - discountedItems) * item.price;
+            (item.newQuantity - discountedItems) * item.price;
           // const additionalCharge = calculateAdditionalCharge(totalItemPrice);
           return total + totalItemPrice;
         }, 0);
@@ -104,7 +106,7 @@ const PaystackButton = ({
     } else {
       setTotalAmount(totalCartPrice * 100); // Convert to kobo for Paystack
     }
-  }, [cart, sellerData?.transactionSplit, totalCartPrice, userEmail]);
+  }, [cart, sellerData?.transactionSplit, sellerId, totalCartPrice, userEmail]);
 
   const handlePayment = async () => {
     // Validate customer and delivery info
@@ -121,7 +123,7 @@ const PaystackButton = ({
           process.env.PAYSTACK_PUBLIC_KEY ||
           "pk_live_6d3801f96403d265cf61c901229e239a95e6a637",
         email: customerInfo.email,
-        amount: 10000, // Submit the discounted total (including additional charges) to Paystack
+        amount: totalAmount, // Submit the discounted total (including additional charges) to Paystack
         currency: "NGN",
         ref: generateReference(), // Unique transaction reference
         // split_code: splitCode,
@@ -191,6 +193,7 @@ const PaystackButton = ({
   const handleSuccessClose = () => {
     setPaymentSuccess(false);
     clearCart(); // Clear the cart when the success modal closes
+    router.push("/"); // Redirect to the orders page after successful payment
   };
 
   return (

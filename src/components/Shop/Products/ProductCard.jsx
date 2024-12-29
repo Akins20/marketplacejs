@@ -16,7 +16,7 @@ const ProductCard = ({ product }) => {
   const [isAdding, setIsAdding] = useState(false); // Loading state for the cart button
 
   // Default quantity if not provided in the product object
-  const quantity = product.quantity || 1;
+  const quantity = 1;
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat("en-NG", {
@@ -37,7 +37,7 @@ const ProductCard = ({ product }) => {
       // Add to cart with proper structure
       await addToCart({
         ...product,
-        quantity, // Ensure the quantity is correctly passed
+        newQuantity: quantity, // Ensure the new quantity is correctly passed
         sellerId: product.sellerId, // Seller ID is necessary for grouping
       });
 
@@ -111,7 +111,7 @@ const ProductCard = ({ product }) => {
             </span>
           )}
         </div>
-        <h2 className="text-xl font-bold mb-2">{product.title}</h2>
+        <h2 className="text-xl font-bold mb-2">{product.title.slice(0, 20)}...</h2>
         <div className="mb-2">{renderStars(product)}</div>
         <div className="flex items-center justify-between mt-2">
           <div className="flex flex-col">
