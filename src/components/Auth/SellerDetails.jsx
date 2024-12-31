@@ -8,9 +8,9 @@ const SellerDetails = ({ sellerDetails, setSellerDetails, banks }) => {
 
   return (
     <div className="bg-white shadow-xl rounded-lg p-8 max-w-lg mx-auto">
-      <h2 className="text-3xl font-bold text-center bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent mb-6">
+      {/* <h2 className="text-3xl font-bold text-center bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent mb-6">
         Seller Information
-      </h2>
+      </h2> */}
       <form className="space-y-6">
         <input
           type="text"

@@ -46,7 +46,7 @@ const SignInPage = () => {
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-gray-50 to-gray-300 py-10 px-4">
       <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md transition-transform transform hover:scale-105 text-gray-700">
         <h1 className="text-3xl font-bold text-center text-green-600 mb-6">
-          Megacommerce
+          Marketplace
         </h1>
         <p className="text-center text-gray-500 mb-8">
           Enter your credentials to sign in and access your account!
