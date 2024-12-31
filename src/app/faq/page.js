@@ -7,7 +7,7 @@ const FAQ = () => {
         </h1>
         <ul className="list-disc list-inside text-gray-700">
           <li>
-            <strong>What Payment Options are Available on Doodies?</strong>
+            <strong>What Payment Options are Available on Marketplace?</strong>
             <p className="ml-4">
               You can conveniently pay online or on delivery with your cards
               (MasterCard, Visa, and Verve), bank transfers, and USSD.

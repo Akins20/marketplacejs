@@ -295,7 +295,7 @@ export default async function handler(req, res) {
           totalAmount / 100
         ).toFixed(2)}</p>
         <p>If you have any questions, feel free to contact us.</p>
-        <p>Best regards,<br/>The Doodies E-Commerce Team</p>
+        <p>Best regards,<br/>The Marketplace Team</p>
       </div>
     `;
 

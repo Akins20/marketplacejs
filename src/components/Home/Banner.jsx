@@ -30,7 +30,7 @@ export default function Banner() {
             </span>
           </p>
           <p className="text-lg text-gray-500 mb-6">
-            Save more with Doodies Shop....
+            Save more with Marketplace....
           </p>
           <Link
             href="/shop"
