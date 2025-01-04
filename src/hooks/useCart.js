@@ -126,19 +126,28 @@ const useCart = () => {
     await syncCartToStorageOrFirestore(updatedCart);
   };
 
-  const removeCartItem = async (sellerId, productId, size, color) => {
+  const removeCartItem = async (sellerId, productId) => {
     const updatedCart = { ...cart };
-    const productKey = size && color ? `${size}-${color}` : productId;
 
-    if (updatedCart[sellerId] && updatedCart[sellerId][productKey]) {
-      delete updatedCart[sellerId][productKey]; // Remove item
+    // Check if the seller's cart exists
+    if (updatedCart[sellerId]) {
+      // Filter out the product with the specified productId
+      updatedCart[sellerId] = updatedCart[sellerId].filter(
+        (cartItem) => cartItem.id !== productId
+      );
 
-      if (Object.keys(updatedCart[sellerId]).length === 0) {
-        delete updatedCart[sellerId]; // Remove seller if cart is empty
+      // If the seller's cart is empty after removal, delete the seller's cart
+      if (updatedCart[sellerId].length === 0) {
+        delete updatedCart[sellerId];
       }
+
+      alert("Product removed from cart.");
     }
 
+    // Update the cart state
     setCart(updatedCart);
+
+    // Sync the updated cart to storage or Firestore
     await syncCartToStorageOrFirestore(updatedCart);
   };
 
@@ -220,10 +229,12 @@ const useCart = () => {
     }
 
     const updatedCart = { ...cart };
+    // console.log("This is sellerCart:", JSON.stringify(updatedCart));
 
     // Check if the seller exists in the cart
     if (updatedCart[sellerId]) {
       const sellerCart = updatedCart[sellerId];
+      // console.log("This is sellerCartTwo:", JSON.stringify(sellerCart));
 
       // Find the product in the seller's cart by matching product.id
       const productIndex = sellerCart.findIndex(
@@ -244,7 +255,7 @@ const useCart = () => {
       throw new Error("Seller not found in cart.");
     }
   };
-  // utils/cartUtils.js
+
   const filterCart = (cart, sellerId) => {
     if (sellerId) {
       return Array.isArray(cart[sellerId]) ? cart[sellerId] : [];
@@ -267,7 +278,7 @@ const useCart = () => {
     getTotalCartQuantityBySeller,
     removeAllCartItemsBySeller,
     updateCartQuantity,
-    filterCart
+    filterCart,
   };
 };
 

@@ -1,20 +1,20 @@
-import Image from "next/image";
-import { FaTrash } from "react-icons/fa";
+"use client";
+
 import { useState } from "react";
 import useCart from "@/hooks/useCart";
 import Link from "next/link";
+import Image from "next/image";
+import { FaTrash } from "react-icons/fa";
 
-const CartItem = ({ item, sellerId }) => {
-  const { updateCartQuantity, removeCartItem } = useCart();
+const CartItem = ({ item, sellerId, updateCartQuantity, removeCartItem }) => {
   const [quantity, setQuantity] = useState(item.newQuantity);
 
   const handleQuantityChange = (newQuantity) => {
     if (newQuantity <= 0) {
-      removeCartItem(sellerId, item.id, item.size, item.color);
+      removeCartItem(sellerId, item.id);
     } else if (newQuantity <= item.quantity) {
-      console.log("This is new quantity: " + newQuantity);
       setQuantity(newQuantity);
-      updateCartQuantity(sellerId, item.id, newQuantity, item.quantity); // Updates global cart
+      updateCartQuantity(sellerId, item.id, newQuantity, item.quantity);
     }
   };
 
@@ -68,7 +68,9 @@ const CartItem = ({ item, sellerId }) => {
             </p>
             <button
               className="text-red-500 hover:text-red-700"
-              onClick={() => removeCartItem(sellerId, item.id)}
+              onClick={() =>
+                removeCartItem(sellerId, item.id, item.size, item.color)
+              }
             >
               <FaTrash />
             </button>

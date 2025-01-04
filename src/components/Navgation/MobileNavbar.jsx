@@ -50,14 +50,16 @@ const MobileNavbar = () => {
   const menuRef = useRef(null);
 
   // Mock data - replace with your actual data/hooks
-  const cartCount = Object.values(cart).reduce(
-    (total, sellerItems) =>
-      total +
-      sellerItems.reduce(
-        (sellerTotal, item) => sellerTotal + (item.quantity || 0),
-        0
-      ),
-    0
+  const cartCount = parseInt(
+    Object.values(cart).reduce(
+      (total, sellerItems) =>
+        total +
+        sellerItems.reduce(
+          (sellerTotal, item) => sellerTotal + (item.newQuantity || 0),
+          0
+        ),
+      0
+    )
   );
 
   // Handle click outside to close menu

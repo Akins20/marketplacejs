@@ -1,4 +1,4 @@
-import ProductDetails from "@/components/Shop/ProductDetails";
+import ProductDetails from "@/components/Shop/ProductDetails/ProductDetails";
 
 const ProductPage = ({ params }) => {
   // Replace hyphens with spaces

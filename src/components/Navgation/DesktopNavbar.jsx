@@ -31,12 +31,12 @@ export default function DesktopNavbar({ toggleSearch }) {
 
   // Calculate total cart count
   const cartCount = Object.values(cart).reduce((total, sellerItems) => {
-    return (
+    return parseInt(
       total +
-      sellerItems.reduce(
-        (sellerTotal, item) => sellerTotal + (item.quantity || 0),
-        0
-      )
+        sellerItems.reduce(
+          (sellerTotal, item) => sellerTotal + (item.newQuantity || 0),
+          0
+        )
     );
   }, 0);
 

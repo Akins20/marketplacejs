@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Banner from "./Banner";
-import PillSwitcher from "./PillSwitcher";
+// import PillSwitcher from "./PillSwitcher";
 import CategoryButtonPicker from "./CategoryButtonPicker";
 import ProductServiceViewer from "./ProductServiceViewer";
 import { useProductData } from "@/hooks/useProductData";
@@ -10,8 +10,8 @@ import { useServiceData } from "@/hooks/useServiceData";
 import { useProductCategoryData } from "@/hooks/useProductCategoryData";
 import { fetchMessageRecipientAndMessages } from "@/utils/messageUtils";
 import useProvideAuth from "../generalUtils/useAuth";
-import ChatPanel from "../Messenger/messengerComponents/ChatPanel";
-import Conversation from "../Messenger/messengerComponents/chatComponents/Conversation";
+// import ChatPanel from "../Messenger/messengerComponents/ChatPanel";
+// import Conversation from "../Messenger/messengerComponents/chatComponents/Conversation";
 import SkeletonCategories from "../Shop/SkelotonCategories";
 
 export default function Homepage() {

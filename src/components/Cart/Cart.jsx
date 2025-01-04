@@ -8,10 +8,12 @@ import CartItem from "./CartItem";
 import CartSummary from "./CartSummary";
 
 const CartPage = ({ sellerId }) => {
-  const { cart, getCartBySeller } = useCart();
+  const { cart, getCartBySeller, updateCartQuantity, removeCartItem } =
+    useCart();
   const router = useRouter();
   const [filteredCart, setFilteredCart] = useState([]);
   const [selectedSellerId, setSelectedSellerId] = useState("all");
+  const [pickedSellerId, setPickedSellerId] = useState("");
 
   // Function to check if an object or array is empty
   const isEmpty = (obj) => {
@@ -26,10 +28,17 @@ const CartPage = ({ sellerId }) => {
   useEffect(() => {
     if (sellerId) {
       const sellerCart = getCartBySeller(sellerId) || [];
+      const newSellerId =
+        selectedSellerId === "all" ? Object.keys(cart)[0] : selectedSellerId;
+
+      setPickedSellerId(newSellerId);
       setFilteredCart(Array.isArray(sellerCart) ? sellerCart : []);
       setSelectedSellerId(sellerId);
     } else {
       const allCartItems = Object.values(cart || {}).flat() || [];
+      const newSellerId =
+        selectedSellerId === "all" ? Object.keys(cart)[0] : selectedSellerId;
+      setPickedSellerId(newSellerId);
       setFilteredCart(Array.isArray(allCartItems) ? allCartItems : []);
       setSelectedSellerId("all");
     }
@@ -39,10 +48,10 @@ const CartPage = ({ sellerId }) => {
   const handleCheckout = () => {
     if (isEmpty(filteredCart)) return;
 
-    const pickedSellerId =
-      selectedSellerId === "all"
-        ? Object.keys(cart)[0] // Default to the first seller if no seller is selected
-        : selectedSellerId;
+    // const pickedSellerId =
+    //   selectedSellerId === "all"
+    //     ? Object.keys(cart)[0] // Default to the first seller if no seller is selected
+    //     : selectedSellerId;
 
     router.push(`/${pickedSellerId}/checkout`);
   };
@@ -84,12 +93,19 @@ const CartPage = ({ sellerId }) => {
               {/* Ensure filteredCart is an array and map over it */}
               {Array.isArray(filteredCart) &&
                 filteredCart.map((item) => (
-                  <CartItem key={item.id} item={item} sellerId={sellerId} />
+                  <CartItem
+                    key={item.id}
+                    item={item}
+                    sellerId={pickedSellerId}
+                    updateCartQuantity={updateCartQuantity}
+                    removeCartItem={removeCartItem}
+                  />
                 ))}
             </div>
             <CartSummary
-              sellerId={sellerId}
+              sellerId={pickedSellerId}
               handleCheckout={handleCheckout}
+              filteredCart={filteredCart}
             />
           </div>
         </div>

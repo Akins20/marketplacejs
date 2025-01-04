@@ -1,29 +1,34 @@
+"use client";
+
 import useCart from "@/hooks/useCart";
+import { useMemo } from "react";
 
-const CartSummary = ({ sellerId, handleCheckout }) => {
-  const { filterCart, cart } = useCart();
-  const filteredCart = filterCart(cart, sellerId);
+const CartSummary = ({ sellerId, handleCheckout, filteredCart }) => {
+  // Memoize filtered cart and totals to avoid recalculating on every render
+  // const filteredCart = useMemo(
+  //   () => filterCart(sellerId),
+  //   [filterCart, sellerId]
+  // );
 
-  // Calculate the total price, considering quantity for both variant and non-variant products
-  const calculateTotalPrice = () =>
-    filteredCart.reduce(
-      (total, item) => total + item.price * item.newQuantity,
-      0
-    );
+  const totalPrice = useMemo(
+    () =>
+      parseInt(
+        filteredCart.reduce(
+          (total, item) => total + item.price * item.newQuantity,
+          0
+        )
+      ),
+    [filteredCart]
+  );
+  // console.log("This is filtered cart:", JSON.stringify(filteredCart.length))
 
-  // Format price to currency
+  const totalItems = filteredCart.length;
+
   const formatPrice = (price) =>
     new Intl.NumberFormat("en-NG", {
       style: "currency",
       currency: "NGN",
     }).format(price);
-
-  // Get total number of items, regardless of whether they are variants or not
-  const totalItems = filteredCart.reduce(
-    (total, item) => total + item.newQuantity,
-    0
-  );
-  console.log("This is filtered: " + JSON.stringify(totalItems));
 
   return (
     <div className="mt-8 md:mt-0 md:w-1/3 w-full bg-white p-6 rounded-lg shadow-md text-gray-800 border border-gray-200">
@@ -38,7 +43,7 @@ const CartSummary = ({ sellerId, handleCheckout }) => {
         <div className="flex justify-between items-center border-t pt-4">
           <p className="font-bold text-gray-700 text-lg">Total:</p>
           <p className="font-bold text-green-600 text-lg">
-            {formatPrice(calculateTotalPrice())}
+            {formatPrice(totalPrice)}
           </p>
         </div>
       </div>

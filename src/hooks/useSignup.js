@@ -142,6 +142,7 @@ const useSignUp = () => {
     banks,
     loading,
     notification,
+    setNotification,
     handleSignUp,
   };
 };
