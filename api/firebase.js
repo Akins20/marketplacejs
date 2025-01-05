@@ -9,13 +9,13 @@ import { getStorage } from "firebase/storage";
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyDJ8kytJQJv2M2OW-0_LZr5vmEa77hcRys",
-  authDomain: "megacommerce-cbc47.firebaseapp.com",
-  projectId: "megacommerce-cbc47",
-  storageBucket: "megacommerce-cbc47.appspot.com",
-  messagingSenderId: "1032850360763",
-  appId: "1:1032850360763:web:3c65c608eb34e05a449c9e",
-  measurementId: "G-M1DST6J337",
+  apiKey: "As",
+  authDomain: "yourauthdomain",
+  projectId: "your project id",
+  storageBucket: "your storage bucket",
+  messagingSenderId: "your messaging sender id",
+  appId: "well yuno",
+  measurementId: "also yuno",
 };
 
 // Initialize Firebase
