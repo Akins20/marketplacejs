@@ -35,8 +35,8 @@ export default async function handler(req, res) {
       const transporter = nodemailer.createTransport({
         service: "gmail",
         auth: {
-          user: process.env.EMAIL_USER || "ogascountyng@gmail.com", // Admin email fallback
-          pass: process.env.EMAIL_PASS || "fuhcocpoxnqrxxmg", // Admin password fallback
+          user: process.env.EMAIL_USER || "your email", // Admin email fallback
+          pass: process.env.EMAIL_PASS || "email pass", // Admin password fallback
         },
         tls: {
           rejectUnauthorized: false,
@@ -44,7 +44,7 @@ export default async function handler(req, res) {
       });
 
       const currentTime = new Date().toLocaleString(); // Get current date and time
-      const adminEmail = process.env.EMAIL_USER || "ogascountyng@gmail.com"; // Admin email fallback
+      const adminEmail = process.env.EMAIL_USER || "your email"; // Admin email fallback
       const orderId = uuidv4(); // Generate a unique ID for the order
 
       // Group products by seller email or default to admin
@@ -74,7 +74,7 @@ export default async function handler(req, res) {
         .toLowerCase()
         .trim()
         .replace(/-/g, " ");
-        const productRef = doc(firestore, "products", normalizedProductId);
+        const productRef = doc(firestore, "products", item.id);
         const productSnap = await getDoc(productRef);
 
         if (productSnap.exists()) {
@@ -218,7 +218,7 @@ export default async function handler(req, res) {
                       (item) => `
                       <tr>
                         <td style="${tableCellStyles}">${item.title}</td>
-                        <td style="${tableCellStyles}">${item.quantity}</td>
+                        <td style="${tableCellStyles}">${item.newQuantity}</td>
                         <td style="${tableCellStyles}">₦${item.price}</td>
                         <td style="${tableCellStyles}">₦${
                         item.discountedPrice || item.price
@@ -280,7 +280,7 @@ export default async function handler(req, res) {
                 (item) => `
                   <tr>
                     <td style="${tableCellStyles}">${item.title}</td>
-                    <td style="${tableCellStyles}">${item.quantity}</td>
+                    <td style="${tableCellStyles}">${item.newQantity}</td>
                     <td style="${tableCellStyles}">₦${item.price}</td>
                     <td style="${tableCellStyles}">₦${
                   item.discountedPrice || item.price
@@ -341,7 +341,7 @@ export default async function handler(req, res) {
                     (item) => `
                       <tr>
                         <td style="${tableCellStyles}">${item.title}</td>
-                        <td style="${tableCellStyles}">${item.quantity}</td>
+                        <td style="${tableCellStyles}">${item.newQantity}</td>
                         <td style="${tableCellStyles}">₦${item.price}</td>
                         <td style="${tableCellStyles}">₦${
                       item.discountedPrice || item.price
