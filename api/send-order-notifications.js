@@ -17,8 +17,8 @@ export default async function handler(req, res) {
       const transporter = nodemailer.createTransport({
         service: "gmail",
         auth: {
-          user: process.env.EMAIL_USER || "ogascountyng@gmail.com", // Admin email fallback
-          pass: process.env.EMAIL_PASS || "fuhcocpoxnqrxxmg", // Admin password fallback
+          user: process.env.EMAIL_USER || "your email", // Admin email fallback
+          pass: process.env.EMAIL_PASS || "email pass", // Admin password fallback
         },
         tls: {
           rejectUnauthorized: false, // Accept self-signed certificates
@@ -26,7 +26,7 @@ export default async function handler(req, res) {
       });
 
       const currentTime = new Date().toLocaleString(); // Current date and time
-      const adminEmail = process.env.EMAIL_USER || "ogascountyng@gmail.com";
+      const adminEmail = process.env.EMAIL_USER || "your email";
       const orderId = uuidv4(); // Generate a unique ID for the order
 
       // Group products by seller email or default to admin
@@ -88,7 +88,7 @@ export default async function handler(req, res) {
                         (item) => `
                           <tr>
                             <td style="border: 1px solid #ddd; padding: 8px;">${item.title}</td>
-                            <td style="border: 1px solid #ddd; padding: 8px;">${item.quantity}</td>
+                            <td style="border: 1px solid #ddd; padding: 8px;">${item.newQuantity}</td>
                             <td style="border: 1px solid #ddd; padding: 8px;">₦${item.price}</td>
                           </tr>
                         `
@@ -139,7 +139,7 @@ export default async function handler(req, res) {
                   (item) => `
                     <tr>
                       <td style="border: 1px solid #ddd; padding: 10px;">${item.title}</td>
-                      <td style="border: 1px solid #ddd; padding: 10px;">${item.quantity}</td>
+                      <td style="border: 1px solid #ddd; padding: 10px;">${item.newQantity}</td>
                       <td style="border: 1px solid #ddd; padding: 10px;">₦${item.price}</td>
                     </tr>
                   `
@@ -196,7 +196,7 @@ export default async function handler(req, res) {
                       (item) => `
                         <tr>
                           <td style="border: 1px solid #ddd; padding: 8px;">${item.title}</td>
-                          <td style="border: 1px solid #ddd; padding: 8px;">${item.quantity}</td>
+                          <td style="border: 1px solid #ddd; padding: 8px;">${item.newQantity}</td>
                           <td style="border: 1px solid #ddd; padding: 8px;">₦${item.price}</td>
                         </tr>
                       `
@@ -205,7 +205,7 @@ export default async function handler(req, res) {
                 </tbody>
               </table>
               <p><strong>Total Amount for Your Products:</strong> ₦${sellerProducts.reduce(
-                (sum, item) => sum + item.price * item.quantity,
+                (sum, item) => sum + item.price * item.newQuantity,
                 0
               )}</p>
             </div>
