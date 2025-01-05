@@ -30,7 +30,7 @@ const FlutterwavePaymentButton = ({ cart, userEmail }) => {
 
     let discountedPrice = item.price;
     let discountedItems = Math.min(
-      item.quantity,
+      item.newQuantity,
       parseInt(maxDiscountedItems, 10) || 0
     );
 
@@ -134,7 +134,7 @@ const FlutterwavePaymentButton = ({ cart, userEmail }) => {
   const config = {
     public_key:
       process.env.FLUTTERWAVE_PUBLIC_KEY ||
-      "FLWPUBK-194a7421b1e1e7e0acc977ced9ab5667-X",
+      "your flutterwave publick key",
     tx_ref: `txn_${new Date().getTime()}`,
     amount: totalAmount / 100, // Amount in NGN (convert kobo to Naira)
     currency: "NGN",
