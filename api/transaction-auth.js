@@ -1,10 +1,10 @@
 const PAYSTACK_API_BASE = "https://api.paystack.co";
 const PAYSTACK_SECRET_LIVE_KEY =
   process.env.PAYSTACK_SECRET_KEY ||
-  "sk_live_a1d4985593f869999aae97227691856daeeca50f"; // Use your live key
+  "your paystack live secret key"; // Use your live key
 const PAYSATCK_SECRET_TEST_KEY =
   process.env.PAYSTACK_TEST_SECRET_KEY ||
-  "sk_test_1cc44e810509164c9fd280f55f4f7d42d7b209f6";
+  "your paystack test secret key";
 
 // Fetch list of banks from Paystack API
 async function getBanks() {
