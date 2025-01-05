@@ -115,13 +115,12 @@ const PaystackButton = ({
       return;
     }
 
-
     try {
       setLoading(true);
       const paymentHandler = window.PaystackPop.setup({
         key:
           process.env.PAYSTACK_PUBLIC_KEY ||
-          "pk_live_6d3801f96403d265cf61c901229e239a95e6a637",
+          "your test or live secret key",
         email: customerInfo.email,
         amount: totalAmount, // Submit the discounted total (including additional charges) to Paystack
         currency: "NGN",
